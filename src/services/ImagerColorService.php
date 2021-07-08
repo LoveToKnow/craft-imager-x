@@ -66,7 +66,7 @@ class ImagerColorService extends Component
      *
      * @return string|array|boolean|null
      */
-    public function getDominantColor($image, $quality, $colorValue)
+    public function getDominantColor($image, $quality = 10, $colorValue = 'hex')
     {
         try {
             $source = new LocalSourceImageModel($image);
@@ -75,7 +75,12 @@ class ImagerColorService extends Component
             return null;
         }
 
-        $dominantColor = ColorThief::getColor($source->getFilePath(), $quality);
+        try {
+            $dominantColor = ColorThief::getColor($source->getFilePath(), $quality);
+        } catch (\RuntimeException $e) {
+            \Craft::error('Couldn\'t get dominant color for "' . $source->getFilePath() . '". Error was: ' . $e->getMessage());
+            return null;
+        }
 
         ImagerService::cleanSession();
 
@@ -96,7 +101,7 @@ class ImagerColorService extends Component
      *
      * @return array|null
      */
-    public function getColorPalette($image, $colorCount, $quality, $colorValue)
+    public function getColorPalette($image, $colorCount = 8, $quality = 10, $colorValue = 'hex')
     {
         try {
             $source = new LocalSourceImageModel($image);
@@ -105,8 +110,19 @@ class ImagerColorService extends Component
             return null;
         }
 
-        $palette = ColorThief::getPalette($source->getFilePath(), $colorCount, $quality);
-
+        try {
+            // Hack for count error in ColorThief
+            // See: https://github.com/lokesh/color-thief/issues/19 and https://github.com/lokesh/color-thief/pull/84
+            $adjustedColorCount = $colorCount > 7 ? $colorCount + 1 : $colorCount;
+            
+            $palette = ColorThief::getPalette($source->getFilePath(), $adjustedColorCount, $quality);
+            
+            $palette = array_slice($palette, 0, $colorCount);
+        } catch (\RuntimeException $e) {
+            \Craft::error('Couldn\'t get palette for "' . $source->getFilePath() . '". Error was: ' . $e->getMessage());
+            return null;
+        }
+        
         ImagerService::cleanSession();
 
         return $colorValue === 'hex' ? $this->paletteToHex($palette) : $palette;

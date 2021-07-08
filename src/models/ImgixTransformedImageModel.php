@@ -45,6 +45,7 @@ class ImgixTransformedImageModel extends BaseTransformedImageModel implements Tr
      */
     public function __construct($imageUrl = null, $source = null, $params = null, $config = null)
     {
+        $this->source = $source;
         $this->profileConfig = $config;
         $this->params = $params;
         $this->imgixPath = ImgixHelpers::getImgixFilePath($source, $config);
@@ -62,20 +63,25 @@ class ImgixTransformedImageModel extends BaseTransformedImageModel implements Tr
         $this->height = 0;
 
         if (isset($params['w'], $params['h'])) {
+            $this->width = (int)$params['w'];
+            $this->height = (int)$params['h'];
+            
             if (($source !== null) && ($params['fit'] === 'min' || $params['fit'] === 'max')) {
                 list($sourceWidth, $sourceHeight) = $this->getSourceImageDimensions($source);
 
                 $paramsW = (int)$params['w'];
                 $paramsH = (int)$params['h'];
 
-                if ($sourceWidth / $sourceHeight < $paramsW / $paramsH) {
-                    $useW = min($paramsW, $sourceWidth);
-                    $this->width = $useW;
-                    $this->height = round($useW * ($paramsH / $paramsW));
-                } else {
-                    $useH = min($paramsH, $sourceHeight);
-                    $this->width = round($useH * ($paramsW / $paramsH));
-                    $this->height = $useH;
+                if ($sourceWidth !== 0 && $sourceHeight !== 0) {
+                    if ($sourceWidth / $sourceHeight < $paramsW / $paramsH) {
+                        $useW = min($paramsW, $sourceWidth);
+                        $this->width = $useW;
+                        $this->height = round($useW * ($paramsH / $paramsW));
+                    } else {
+                        $useH = min($paramsH, $sourceHeight);
+                        $this->width = round($useH * ($paramsW / $paramsH));
+                        $this->height = $useH;
+                    }
                 }
             } elseif ($source !== null && $params['fit'] === 'clip') {
                 list($sourceWidth, $sourceHeight) = $this->getSourceImageDimensions($source);
@@ -83,18 +89,17 @@ class ImgixTransformedImageModel extends BaseTransformedImageModel implements Tr
                 $paramsW = (int)$params['w'];
                 $paramsH = (int)$params['h'];
 
-                if ($sourceWidth / $sourceHeight > $paramsW / $paramsH) {
-                    $useW = min($paramsW, $sourceWidth);
-                    $this->width = $useW;
-                    $this->height = round($useW * ($sourceHeight / $sourceWidth));
-                } else {
-                    $useH = min($paramsH, $sourceHeight);
-                    $this->width = round($useH * ($sourceWidth / $sourceHeight));
-                    $this->height = $useH;
-                }
-            } else {
-                $this->width = (int)$params['w'];
-                $this->height = (int)$params['h'];
+                if ($sourceWidth !== 0 && $sourceHeight !== 0) {
+                    if ($sourceWidth / $sourceHeight > $paramsW / $paramsH) {
+                        $useW = min($paramsW, $sourceWidth);
+                        $this->width = $useW;
+                        $this->height = round($useW * ($sourceHeight / $sourceWidth));
+                    } else {
+                        $useH = min($paramsH, $sourceHeight);
+                        $this->width = round($useH * ($sourceWidth / $sourceHeight));
+                        $this->height = $useH;
+                    }
+                } 
             }
         } else {
             if (isset($params['w']) || isset($params['h'])) {
@@ -248,20 +253,47 @@ class ImgixTransformedImageModel extends BaseTransformedImageModel implements Tr
             $params['prefix'] = $cssPrefix;
         }
         
-        $paletteUrl = $builder->createURL($this->imgixPath, $params);
-        $key = 'imager-x-imgix-palette-' . base64_encode($paletteUrl);
+        $blurhashUrl = $builder->createURL($this->imgixPath, $params);
+        $key = 'imager-x-imgix-palette-' . base64_encode($blurhashUrl);
         
         $cache = \Craft::$app->getCache();
-        $paletteData = $cache->getOrSet($key, static function () use ($paletteUrl) {
-            return @file_get_contents($paletteUrl);
+        $blurhashData = $cache->getOrSet($key, static function () use ($blurhashUrl) {
+            return @file_get_contents($blurhashUrl);
         });
         
-        if (!$paletteData) {
-            \Craft::error('An error occured when trying to get palette data from Imgix. The URL was: ' . $paletteUrl);
+        if (!$blurhashData) {
+            \Craft::error('An error occured when trying to get palette data from Imgix. The URL was: ' . $blurhashUrl);
             return null;
         }
         
-        return $format === 'json' ? json_decode($paletteData, false) : $paletteData;
+        return $format === 'json' ? json_decode($blurhashData, false) : $blurhashData;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBlurhash()
+    {
+        $builder = ImgixHelpers::getBuilder($this->profileConfig);
+        
+        $params = $this->params ?? [];
+        $params['fm'] = 'blurhash';
+        
+        $blurhashUrl = $builder->createURL($this->imgixPath, $params);
+        
+        $key = 'imager-x-imgix-blurhash-' . base64_encode($blurhashUrl);
+        
+        $cache = \Craft::$app->getCache();
+        $blurhashData = $cache->getOrSet($key, static function () use ($blurhashUrl) {
+            return @file_get_contents($blurhashUrl);
+        });
+        
+        if (!$blurhashData) {
+            \Craft::error('An error occured when trying to get blurhash data from Imgix. The URL was: ' . $blurhashUrl);
+            return '';
+        }
+        
+        return (string)$blurhashData;
     }
     
 }

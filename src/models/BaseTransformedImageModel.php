@@ -17,49 +17,54 @@ use spacecatninja\imagerx\exceptions\ImagerException;
 class BaseTransformedImageModel
 {
     /**
-     * @var string
+     * @var mixed
      */
-    public $path;
-    
+    public $source = null;
+
     /**
      * @var string
      */
-    public $filename;
-    
+    public $path = '';
+
     /**
      * @var string
      */
-    public $url;
-    
+    public $filename = '';
+
     /**
      * @var string
      */
-    public $extension;
-    
+    public $url = '';
+
     /**
      * @var string
      */
-    public $mimeType;
-    
+    public $extension = '';
+
+    /**
+     * @var string
+     */
+    public $mimeType = '';
+
     /**
      * @var int
      */
-    public $width;
-    
+    public $width = 0;
+
     /**
      * @var int
      */
-    public $height;
-    
+    public $height = 0;
+
     /**
      * @var int|float
      */
-    public $size;
-    
+    public $size = 0;
+
     /**
      * @var bool
      */
-    public $isNew;
+    public $isNew = false;
 
     /**
      * @return string
@@ -116,29 +121,24 @@ class BaseTransformedImageModel
     {
         return (int)$this->height;
     }
-    
-    /**
-     * @return bool
-     */
-    public function getIsNew(): bool 
-    {
-        return $this->isNew;
-    }
 
     /**
-     * @return string
+     * @param string $unit
+     * @param int $precision
+     *
+     * @return float|int
      */
-    public function __toString()
+    public function getSize($unit = 'b', $precision = 2)
     {
-        return (string)$this->url;
+        return 0;
     }
-    
+
     /**
      * @param array $settings
      * @return string
      * @throws ImagerException
      */
-    public function getPlaceholder($settings = []):string
+    public function getPlaceholder($settings = []): string
     {
         if ($settings) {
             if (!isset($settings['width'])) {
@@ -148,7 +148,48 @@ class BaseTransformedImageModel
                 $settings['height'] = $this->height;
             }
         }
-        
+
         return ImagerX::$plugin->placeholder->placeholder($settings);
     }
+
+    /**
+     * @return bool
+     */
+    public function getIsNew(): bool
+    {
+        return $this->isNew;
+    }
+    
+    /**
+     * @return string
+     */
+    public function getDataUri(): string
+    {
+        return '';
+    }
+
+    /**
+     * @return string
+     */
+    public function getBase64Encoded(): string
+    {
+        return '';
+    }
+
+    /**
+     * @return string
+     */
+    public function getBlurhash()
+    {
+        return '';
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return (string)$this->url;
+    }
+
 }

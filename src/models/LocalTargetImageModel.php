@@ -15,6 +15,7 @@ use Craft;
 use craft\helpers\FileHelper;
 use spacecatninja\imagerx\helpers\ImagerHelpers;
 use spacecatninja\imagerx\services\ImagerService;
+use yii\base\InvalidConfigException;
 
 /**
  * LocalTargetImageModel
@@ -85,7 +86,13 @@ class LocalTargetImageModel
         }
 
         if ($extension === '') {
-            // todo : detect from mime type?
+            $source->getLocalCopy();
+            
+            try {
+                $extension = FileHelper::getExtensionByMimeType(FileHelper::getMimeType($source->path . '/' . $source->filename)) ?? '';
+            } catch (InvalidConfigException $e) {
+                // just continue, we can handle it
+            }
         }
 
         $this->extension = $extension;
@@ -123,6 +130,6 @@ class LocalTargetImageModel
         $patternFilename = mb_ereg_replace('{fullname\|shorthash}', substr(md5($fullname), 0, $shortHashLength), $patternFilename);
         $patternFilename = mb_ereg_replace('{transformString\|shorthash}', substr(md5($transformFileString), 0, $shortHashLength), $patternFilename);
 
-        return $patternFilename;
+        return rtrim($patternFilename, '.');
     }
 }

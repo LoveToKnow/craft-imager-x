@@ -314,7 +314,13 @@ class ImagerHelpers
             return FileHelper::normalizePath('/' . md5('/' . ($addVolumeToPath ? mb_strtolower($volume->handle) . '/' : '') . $asset->folderPath . '/') . '/' . $asset->id . '/');
         }
 
-        return FileHelper::normalizePath('/' . ($addVolumeToPath ? mb_strtolower($volume->handle) . '/' : '') . $asset->folderPath . '/' . $asset->id . '/');
+        $path = FileHelper::normalizePath('/' . ($addVolumeToPath ? mb_strtolower($volume->handle) . '/' : '') . $asset->folderPath . '/' . $asset->id . '/');
+        
+        if (strpos($path, '//') === 0) {
+            $path = substr($path, 1);
+        }
+        
+        return $path;
     }
 
     /**
@@ -475,7 +481,7 @@ class ImagerHelpers
      * Returns something that can be used as a fallback image for the transform method.
      *
      * @param string|Asset|int|null $configValue
-     * @return Asset|array|string|null
+     * @return Asset|string|null
      */
     public static function getTransformableFromConfigSetting($configValue)
     {

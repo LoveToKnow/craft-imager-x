@@ -1,5 +1,108 @@
 # Imager X Changelog
 
+
+## 3.4.1 - 2021-07-05
+
+### Added
+- Added trim transform parameter (closes #99).
+
+### Fixed
+- Fixed an issue that could cause errors when trying to clear transforms in environments without an accessible file system (Thanks, @boboldehampsink).
+- Fixed use of deprecated method `deleteCachesByElementId` when removing transformed assets (fixes #107).
+
+
+## 3.4.0 - 2021-03-31
+
+> {warning} Imager X now requires PHP 7.2.5 or newer.
+
+> {warning} If you're using the ImageOptim optimizer, it have now been removed from core due to lack of support for PHP 8.0 in a required library. It is instead available as [a separate plugin](https://github.com/spacecatninja/craft-imager-x-imageoptim-optimizer). All you need to do is install it, no code or config changes needed.
+
+### Changed
+- Imager X now requires PHP 7.2.5 or higher.
+- ImageOptim optimizer was removed to ensure compability with PHP 8.0 (fixes #94). The optimizer has been split out into a separate package, `spacecatninja/imager-x-imageoptim-optimizer`, which can be installed to make the optimizer continue working.
+
+### Added 
+- Added support for blurhash encoding both for local transforms (adresses #67), and through Imgix (adresses #86).
+- Added support for returning a transform in blurhash "format" when using the GraphQL transformImage directive.
+
+
+## 3.3.1 - 2021-03-30
+
+### Fixed
+- Fixed an issue that would create double slashes if `addVolumeToPath` was set to `false`.
+
+## 3.3.0 - 2021-01-31
+
+> {warning} If you're using the Imgix transformer, and have added an API key to enable purging, you need to create a new one since [Imgix is deprecating their old API in March](https://blog.imgix.com/2020/10/16/api-deprecation). This version of Imager X supports both the old and the new version, but you will get a deprecation error if you use an old API key.
+
+### Added 
+- Added support for the new Imgix API for purging. Deprecation notices are shown if the old API key appear to be for the old API (fixes #64).
+
+### Changed
+- Changed Imgix purging to remove the dependency on Guzzle.
+
+### Fixed
+- Fixed a typo that made it impossible to override CacheControl request headers for AWS external storage (fixes #82).
+
+## 3.2.6 - 2020-11-22
+
+### Added
+- Added detection of extension from mime type for files without an extension, when no format is given.
+- Added support for targeting assets fields inside SuperTable fields in auto generate config, ie `'superTableField:*.myAssetsField'` (closes #75).
+- Added support for wildcards in type parameter when targeting matrix fields in auto generate config, ie `'matrixField:*.myAssetsField'`. 
+- Added `hideClearCachesForUserGroups` config setting which can be used to disable the clear cache paths for Imager for certain user groups (closes #68).
+
+### Fixed
+- Fixed an issue that would occur if no file extension and no transform format was set (fixes #74).
+- Fixed an issue where `getColorPalette` would return an incorrect number of colors. This hack mitigates an error in the underlying ColorThief library (fixes #69).
+
+## 3.2.5 - 2020-11-13
+
+### Added
+- Added default values for optional parameters in `getDominantColor` and `getColorPalette`.
+
+### Fixed
+- Fixed an issue where unused/irrelevant parameters wasn't unset before generating the Imgix transform string.
+
+## 3.2.4 - 2020-10-15
+
+### Added
+- Added `source` to transformed images, which can be used to inspect the source model used to generate the transform (closes #58).
+
+### Fixed
+- Fixed top margins on fieldset's in generate utility (fixes #59).
+
+### Changed
+- Changed default value of registered transformers, the default `craft` transformer is now added statically to alleviate issues that could occur if an error occured, and the necessary events didn't fire (adresses #56).
+
+
+## 3.2.3 - 2020-10-11
+
+### Added
+- Added support for localizing `imagerUrl` config setting (closes #55).
+- Added `useRawExternalUrl` config setting which can be used to opt out of the default external URL encoding (fixes #57).
+- Added `transformerConfig` that can be used to pass config settings directly to a custom transformer.
+
+### Fixed
+- Fixed issue where `checkMemoryForImage` could throw an exception (fixes #54).
+
+## 3.2.2 - 2020-09-22
+
+### Fixed
+- Fixed an issue where uploads to AWS storage would be placed in the wrong path if no subfolder was present due to an initial `/` (Thanks, @JoshCoady).
+- Fixed an issue that would result in a division by zero exception if an external source image could not be downloaded and/or read (fixes #52).
+- Fixed an issue where an exception was thrown if ColorThief could not analyse an image.
+- Fixed how asset URL is retrieved to avoid `Assets::EVENT_GET_ASSET_URL` being called unnecessarily.
+
+## 3.2.1 - 2020-09-12
+
+### Added
+- Added `hasNamedTransform` and `getNamedTransform` template variables (closes #51).
+- Added new `clientSupports` template variable.
+
+### Fixed
+- Fixed an issue where `useForNativeTransforms` could cause an infinite loop (fixes #50).
+
 ## 3.2.0 - 2020-09-03
 
 ### Added

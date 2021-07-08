@@ -12,6 +12,7 @@ namespace spacecatninja\imagerx\models;
 
 use craft\base\Model;
 
+use craft\helpers\ConfigHelper;
 use craft\helpers\FileHelper;
 use spacecatninja\imagerx\services\ImagerService;
 
@@ -57,6 +58,13 @@ class ConfigModel extends Settings
 
         $this->position = str_replace('%', '', $this->position);
 
+        // Replace localized settings
+        $localizables = ['imagerUrl'];
+        
+        foreach ($localizables as $localizable) {
+            $this->{$localizable} = ConfigHelper::localizedValue($this->{$localizable});
+        }
+        
         // Replace aliases
         $parseables = ['imagerSystemPath', 'imagerUrl'];
 
@@ -66,6 +74,11 @@ class ConfigModel extends Settings
         
         // Normalize imager system path 
         $this->imagerSystemPath = FileHelper::normalizePath($this->imagerSystemPath);
+        
+        // Imgix API Key deprecation error
+        if ($this->imgixApiKey !== '' && strlen($this->imgixApiKey) < 50) {
+            \Craft::$app->deprecator->log(__METHOD__, 'You appear to be using an API key for the old version of the Imgix API. You need to acquire a new one, with permissions to purge, and replace the old one in your imager-x.php config file with it. See https://blog.imgix.com/2020/10/16/api-deprecation for more information.');
+        }
     }
 
     /**
